@@ -9,7 +9,6 @@ function App() {
   const peerRef = useRef(null);
   const [room, setRoom] = useState('');
   const [joined, setJoined] = useState(false);
-
   useEffect(() => {
     peerRef.current = new RTCPeerConnection({
       iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
@@ -55,9 +54,13 @@ function App() {
     });
 
     return () => {
-      socket.disconnect();
+      socket.off('user-joined');
+      socket.off('offer');
+      socket.off('answer');
+      socket.off('ice-candidate');
     };
-  }, []);
+  }, [room]);
+
   const joinRoom = async () => {
     try {
       setJoined(true); // Ensure video elements are rendered before accessing refs
@@ -77,6 +80,8 @@ function App() {
       });
 
       socket.emit('join', room);
+      console.log('Emitted join for room:', room);
+
     } catch (error) {
       console.error('Error in joinRoom:', error);
     }
