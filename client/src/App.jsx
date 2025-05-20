@@ -11,13 +11,33 @@ function App() {
   const [joined, setJoined] = useState(false);
   useEffect(() => {
     peerRef.current = new RTCPeerConnection({
-      iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
+      iceServers: [
+        { urls: 'stun:stun.l.google.com:19302' },
+        {
+          urls: 'turn:openrelay.metered.ca:80',
+          username: 'openrelayproject',
+          credential: 'openrelayproject'
+        }
+      ]
     });
 
+
     peerRef.current.ontrack = (event) => {
-      console.log('Received remote track');
-      remoteVideoRef.current.srcObject = event.streams[0];
+      const stream = event.streams[1];
+      if (remoteVideoRef.current && remoteVideoRef.current.srcObject !== stream) {
+        remoteVideoRef.current.srcObject = stream;
+
+      }
     };
+
+    peerRef.current.oniceconnectionstatechange = () => {
+      console.log('ICE connection state:', peerRef.current.iceConnectionState);
+    };
+
+    peerRef.current.onsignalingstatechange = () => {
+      console.log('Signaling state:', peerRef.current.signalingState);
+    };
+
 
     peerRef.current.onicecandidate = (event) => {
       if (event.candidate) {
